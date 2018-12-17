@@ -1,0 +1,206 @@
+<html>
+	<head>
+		<title> - </title>
+	</head>
+	<body>
+		<center>
+			<br/>
+			<img id='img_video'></img><br/>
+			<br/>
+			<input type='button' id='btn_up' value='/\'/>
+			<br/>
+			<input type='button' id='btn_left' value='<<'/>
+			<input type='button' id='btn_light' value='FL'/>
+			<input type='button' id='btn_right' value='>>'/>
+			<br/>
+			<input type='button' id='btn_down' value='\/'/>
+		</center>
+
+		<script>
+
+			//Set image to a color
+			function img_to_color(el,color)
+			{
+				var canvas=document.createElement('canvas');
+				el.width=canvas.width=640;
+				el.height=canvas.height=480;
+				var ctx=canvas.getContext('2d');
+				ctx.fillStyle=color;
+				ctx.fillRect(0,0,canvas.width,canvas.height);
+				el.src=canvas.toDataURL();
+			}
+
+			//Image object used for updating "video"
+			var img_video=document.getElementById('img_video');
+
+			//Global states object used for updating and sending commands to server
+			var states={};
+
+			//Global buttons object used for tracking buttons
+			var buttons={};
+
+			//Global keys object used for parsing pressed keys
+			//  key=keycode
+			//  val={state:STATE_IN_STATES_OBJ ,toggle:boolean}
+			var keys={};
+
+			//XMLHTTP request wrapper
+			//  str is the query string
+			//  success_cb is the callback called when status 200 is returned
+			//  error_cb is the callback called when any other status is returned
+			//  data is any post data to send
+			//  raw is a boolean set to true to received an arraybuffer
+			function xml(str,success_cb,error_cb,data,raw=false)
+			{
+				var xmlhttp=new XMLHttpRequest();
+				xmlhttp.onreadystatechange=function()
+				{
+					if(xmlhttp.readyState==4)
+						if(xmlhttp.status==200)
+						{
+							if(success_cb)
+							{
+								if(raw)
+									success_cb(xmlhttp.response);
+								else
+									success_cb(xmlhttp.responseText);
+							}
+						}
+						else if(error_cb)
+							error_cb(xmlhttp.status);
+				};
+				xmlhttp.open('POST',encodeURI('?'+str),true);
+				if(raw)
+					xmlhttp.responseType='arraybuffer';
+				xmlhttp.send(data);
+			}
+
+			//Send update to server based on global states
+			function ping()
+			{
+				var data='i=1'
+				if(states.up)
+					data+='&u=1';
+				if(states.left)
+					data+='&l=1';
+				if(states.down)
+					data+='&d=1';
+				if(states.right)
+					data+='&r=1';
+				if(states.flashlight)
+					data+='&f=1';
+				xml(data,pong,error,null,true);
+			}
+
+			//Handle response from server (update image) and send next update
+			function pong(img_data)
+			{
+				if(img_data.byteLength==0)
+				{
+					error(0);
+					return;
+				}
+				img_video.src='data:image/jpg;base64,'+btoa(String.fromCharCode.apply(null,new Uint8Array(img_data)));
+				for(var key in buttons)
+					buttons[key].disabled=false;
+				ping();
+			}
+
+			//Handle error from server or error connecting to server
+			//  Set image to color and try connection again
+			function error(code)
+			{
+				console.log('Error - '+code);
+				img_to_color(img_video,'red');
+				for(var key in buttons)
+					buttons[key].disabled=true;
+				setTimeout(function(){ping();},5000);
+			}
+
+			//Sets up a button with the given id
+			//  id is the id of the element to take actions from
+			//  state is the state in the global states object to update
+			//  toggle treats the state as a toggle instead of a hold-down type action
+			function setup_button(id,state,toggle=false)
+			{
+				if(id in buttons)
+					return;
+
+				buttons[id]=document.getElementById(id);
+				buttons[id].style.width='64px';
+				buttons[id].style.margin='4px';
+
+				if(toggle)
+					buttons[id].addEventListener('click',function(){states[state]=!states[state];});
+				else
+				{
+					buttons[id].addEventListener('mousedown',function(){states[state]=true;});
+					buttons[id].addEventListener('mouseup',function(){states[state]=false;});
+					buttons[id].addEventListener('mouseleave',function(){states[state]=false;});
+				}
+			}
+
+			//Sets up keys to trigger a given state
+			//  key_vals is an array of keys that trigger the given state
+			//  state is the state in the global states object to update
+			//  toggle treats the state as a toggle instead of a hold-down type action
+			function setup_key(key_vals,state,toggle=false)
+			{
+				for(var ii=0;ii<key_vals.length;++ii)
+					keys[key_vals[ii]]={state:state,toggle:toggle};
+			}
+
+			//Function called to bootstrap controls
+			function setup()
+			{
+				//Setup global keydown handler
+				document.body.addEventListener('keydown',function(evt)
+				{
+					if(evt.key in keys)
+					{
+						if(!keys[evt.key].toggle)
+							states[keys[evt.key].state]=true;
+						evt.preventDefault();
+					}
+				});
+
+				//Setup global keyup handler
+				document.body.addEventListener('keyup',function(evt)
+				{
+					if(evt.key in keys)
+					{
+						if(keys[evt.key].toggle)
+							states[keys[evt.key].state]=!states[keys[evt.key].state];
+						else
+							states[keys[evt.key].state]=false;
+						evt.preventDefault();
+					}
+				});
+
+				//Setup buttons actions
+				setup_button('btn_up','up');
+				setup_button('btn_left','left');
+				setup_button('btn_down','down');
+				setup_button('btn_right','right');
+				setup_button('btn_light','flashlight',true);
+
+				//Setup key actions
+				setup_key(['ArrowUp','w','W'],'up');
+				setup_key(['ArrowLeft','a','A'],'left');
+				setup_key(['ArrowDown','s','S'],'down');
+				setup_key(['ArrowRight','d','D'],'right');
+				setup_key(['f','F'],'flashlight',true);
+
+				//Initialize image to nothing
+				img_to_color(img_video,'red')
+
+				//Send first command to server
+				ping();
+			}
+
+			//Initialize
+			setup();
+
+		</script>
+	</body>
+</html>
