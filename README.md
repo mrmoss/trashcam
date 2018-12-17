@@ -1,9 +1,9 @@
 # Trashcam
 
-![](https://github.com/mrmoss/trashcam/raw/master/images/0.png)
-![](https://github.com/mrmoss/trashcam/raw/master/images/1.png)
-![](https://github.com/mrmoss/trashcam/raw/master/images/2.png)
-![](https://github.com/mrmoss/trashcam/raw/master/images/3.png)
+![](https://github.com/mrmoss/trashcam/raw/master/images/0.jpg)
+![](https://github.com/mrmoss/trashcam/raw/master/images/1.jpg)
+![](https://github.com/mrmoss/trashcam/raw/master/images/2.jpg)
+![](https://github.com/mrmoss/trashcam/raw/master/images/3.jpg)
 
 This is a simple web enabled camera setup made for this camera rig I found in a Goodwill...figured I'd post it?
 
