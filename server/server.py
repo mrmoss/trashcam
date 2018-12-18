@@ -127,7 +127,6 @@ class handler(http.server.BaseHTTPRequestHandler):
 		#If anything bad happens send a 401 unauthorized
 		except Exception as error:
 			self.send_error(401)
-			print(error)
 
 if __name__=='__main__':
 	while True:
