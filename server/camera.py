@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import cv2
 
-class autocam:
+class autocam_t:
 	def __init__(self,num=0):
 		self.num=num
 		self.obj=None

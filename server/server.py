@@ -10,7 +10,7 @@ import time
 import urllib.parse
 
 #Global webcam object (change this to which camera dev your camera is)
-cam=camera.autocam(1)
+cam=camera.autocam_t(1)
 
 #Global serial port object
 serial_port=cereal.auto_port_t()
